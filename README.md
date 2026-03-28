@@ -187,11 +187,7 @@ The script handles two things that would otherwise break the Windows binary:
 
 ### 2. Configure Git
 
-Find your certificate fingerprint:
-
-```bash
-/mnt/c/Program\ Files/GnuPG/bin/gpgsm.exe --list-keys
-```
+Find your certificate fingerprint in Kleopatra
 
 Then configure Git globally:
 
@@ -212,7 +208,7 @@ Make a test commit and confirm the signature is present:
 
 ```bash
 git commit --allow-empty -m "test: verify gpgsm signing"
-git log --show-signature -1
+git verify-commit HEAD
 ```
 
 You should see a line like `Good signature from [...]` in the output.
