@@ -130,7 +130,7 @@ Open PowerShell or Command Prompt and run:
 certutil.exe -scinfo
 ```
 
-Your certificate should appear in the output. If it does not, check that the YubiKey PIV applet is initialised and that the PCSC service is running.
+Your certificate should appear in the output. If it does not, check that the YubiKey PIV applet is initialised and that the smartcard service is running.
 
 ---
 
