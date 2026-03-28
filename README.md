@@ -74,7 +74,7 @@ openssl x509 -req \
 Verify the extensions were applied correctly:
 
 ```bash
-openssl x509 -in cert.pem -noout -text | grep -A5 "X509v3 extensions"
+openssl x509 -in cert.pem -noout -text"
 ```
 
 ### 5. Import the certificate back onto the YubiKey
