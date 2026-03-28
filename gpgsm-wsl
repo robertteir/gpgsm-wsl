@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+GPGSM_WIN='/mnt/c/Program Files/GnuPG/bin/gpgsm.exe'
+
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+# Convert Linux absolute paths to Windows paths.
+to_win_path() {
+  case "$1" in
+    /*) wslpath -w "$1" ;;
+    *)  printf '%s\n' "$1" ;;
+  esac
+}
+
+args=()
+stdin_to_file=false
+stdin_file="$tmpdir/stdin-data"
+
+while (($#)); do
+  case "$1" in
+    -)
+      # Git passes "-" to mean "read signed data from stdin".
+      stdin_to_file=true
+      shift
+      ;;
+    *)
+      args+=("$(to_win_path "$1")")
+      shift
+      ;;
+  esac
+done
+
+if $stdin_to_file; then
+  cat > "$stdin_file"
+  args+=("$(wslpath -w "$stdin_file")")
+fi
+
+exec "$GPGSM_WIN" "${args[@]}"
