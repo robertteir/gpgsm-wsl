@@ -132,6 +132,14 @@ certutil.exe -scinfo
 
 Your certificate should appear in the output. If it does not, check that the YubiKey PIV applet is initialised and that the smartcard service is running.
 
+Also verify that GnuPG itself can see the card:
+
+```powershell
+& 'C:\Program Files\GnuPG\bin\gpg.exe' --card-status
+```
+
+This should print the card serial number, reader name, and key information. If it fails, scdaemon is not communicating with the card.
+
 ---
 
 ## Importing Certificates into GnuPG
