@@ -90,7 +90,7 @@ In YubiKey Manager:
 
 ### 1. Install Gpg4win
 
-Download and install from <https://www.gpg4win.org/>. Only **GnuPG** is required — Kleopatra is not needed but nice to have.
+Download and install from <https://www.gpg4win.org/>. Only **GnuPG** is required, Kleopatra is not needed but nice to have.
 
 ### 2. Configure `gpg-agent`
 
