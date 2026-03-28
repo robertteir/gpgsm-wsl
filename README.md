@@ -46,8 +46,7 @@ In the YubiKey Manager GUI:
 openssl genrsa -out ca.key 4096
 
 # Self-sign the CA certificate (10-year validity)
-openssl req -new -x509 -days 3650 -key ca.key -out ca.crt \
-  -subj "/CN=My Signing CA"
+openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt -subj "/CN=Cat Factory CA/"
 ```
 
 Keep `ca.key` and `ca.crt` somewhere safe — you will need `ca.crt` later when importing into Gpg4win so it trusts signatures made by this CA.
