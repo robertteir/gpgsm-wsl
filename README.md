@@ -8,7 +8,7 @@ Sign Git commits from WSL using a certificate stored on a YubiKey (PIV), by dele
 
 WSL does not have native access to smart-card readers, so `gpgsm` inside WSL cannot talk to a YubiKey directly. This setup works around that by:
 
-1. Configuring Gpg4win on Windows to talk to the YubiKey over PCSC.
+1. Configuring Gpg4win on Windows to talk to the YubiKey over PCSC (SCardSvr).
 2. Providing a thin wrapper script (`gpgsm-wsl`) inside WSL that translates Linux paths to Windows paths and forwards all calls to `gpgsm.exe` on the host.
 3. Pointing Git's X.509 signing pipeline at that wrapper.
 
@@ -221,7 +221,7 @@ You should see a line like `Good signature from [...]` in the output.
 |---|---|---|
 | `gpgsm.exe` cannot find the key | gpg-agent not running | Run `gpgconf.exe --kill all` and retry |
 | PIN prompt never appears | Wrong `pinentry-program` path | Verify the path in `gpg-agent.conf` matches your Gpg4win install |
-| `certutil -scinfo` shows no card | PCSC service stopped or YubiKey not inserted | Restart the Smart Card service and replug the YubiKey |
+| `certutil -scinfo` shows no card | PCSC service stopped or YubiKey not inserted | Restart the Smart Card service (`SCardSvr`) via `services.msc` or run `Restart-Service SCardSvr` in PowerShell, then replug the YubiKey |
 | `wslpath: invalid argument` | Path contains characters special to WSL | Ensure filenames do not contain backslashes or colons |
 
 To enable verbose logging, uncomment the `log-file` and `debug-level` lines in the config files and restart the agent.
