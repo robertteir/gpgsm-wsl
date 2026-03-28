@@ -136,7 +136,7 @@ Your certificate should appear in the output. If it does not, check that the Yub
 
 ## Importing Certificates into GnuPG (Kleopatra)
 
-`gpgsm --learn-card` can detect the card but fails at the PIN prompt in some environments, so use Kleopatra to import the certificate directly instead.
+`gpgsm --learn-card` can detect the card but fails at the PIN prompt for me, so I used Kleopatra to import the certificate directly instead.
 
 ### 1. Import the signing certificate from the YubiKey
 
