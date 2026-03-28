@@ -37,7 +37,7 @@ In the YubiKey Manager GUI:
 3. Fill in the subject (e.g. `CN=Your Name,E=you@example.com`)
 4. Save the CSR as `csr-9a.csr`
 
-> Slot **9a** (Authentication) is the one confirmed to work with this setup. Slots 9c/9d may work but have not been tested.
+> Slot **9a** (Authentication) is the one confirmed to work with this setup. I was not able to make 9c/9d work.
 
 ### 2. Create a self-signed CA
 
