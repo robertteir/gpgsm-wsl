@@ -17,7 +17,7 @@ WSL does not have native access to smart-card readers, so `gpgsm` inside WSL can
 ## Prerequisites
 
 - Windows with a YubiKey (PIV applet) plugged in
-- [Gpg4win](https://www.gpg4win.org/) installed (install GnuPG and Kleopatra)
+- [Gpg4win](https://www.gpg4win.org/) installed (GnuPG is required; Kleopatra is optional)
 - WSL 2 (any distro)
 
 ---
@@ -90,7 +90,7 @@ In YubiKey Manager:
 
 ### 1. Install Gpg4win
 
-Download and install from <https://www.gpg4win.org/>. Make sure to select at least **GnuPG** and **Kleopatra** during installation.
+Download and install from <https://www.gpg4win.org/>. Only **GnuPG** is required — Kleopatra is not needed but nice to have.
 
 ### 2. Configure `gpg-agent`
 
@@ -134,39 +134,57 @@ Your certificate should appear in the output. If it does not, check that the Yub
 
 ---
 
-## Importing Certificates into GnuPG (Kleopatra)
+## Importing Certificates into GnuPG
 
-`gpgsm --learn-card` can detect the card but fails at the PIN prompt for me, so I used Kleopatra to import the certificate directly instead.
+`gpgsm --learn-card` fails to import the certificate if the CA is not trusted yet. It can reach the card and create key stubs, but then bails out before completing the certificate import. The fix is to import and trust the CA first, then run `--learn-card`.
 
-### 1. Import the signing certificate from the YubiKey
+### 1. Import the CA certificate
 
-1. Open **Kleopatra**
-2. Go to **Tools → Manage Smartcards**
-3. Select your YubiKey from the card list
-4. Click **Import Certificate** — this reads `cert.pem` off the card and registers it with gpgsm
+```powershell
+& 'C:\Program Files\GnuPG\bin\gpgsm.exe' --import ca.crt
+```
 
-### 2. Import the CA certificate
+### 2. Trust the CA certificate
 
-If the CA certificate was not imported automatically in the previous step, import it manually:
-
-1. In Kleopatra, go to **File → Import...**
-2. Select your `ca.crt` file
-
-### 3. Trust the CA certificate
-
-gpgsm will refuse to use a certificate whose CA it does not explicitly trust:
-
-1. In Kleopatra's certificate list, find the imported CA certificate
-2. Right-click it → **Change Validity** (or **Certify**)
-3. Set trust to **Full** and confirm
-
-### 4. Verify gpgsm can see the key
+Get the CA fingerprint:
 
 ```powershell
 & 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-keys
 ```
 
-The signing certificate should appear in the output. Copy its fingerprint — you will need it for the Git configuration in the next section.
+The fingerprint is shown with colons (e.g. `AB:CD:EF:...`). Strip the colons and add a line to `%APPDATA%\gnupg\trustlist.txt` (create the file if it does not exist):
+
+```
+ABCDEF...  S
+```
+
+The `S` flag marks it as a trusted S/MIME root CA, which is what gpgsm uses for X.509 signing.
+
+### 3. Restart the GnuPG agent
+
+```powershell
+& 'C:\Program Files\GnuPG\bin\gpgconf.exe' --kill all
+```
+
+### 4. Import the signing certificate from the YubiKey
+
+```powershell
+& 'C:\Program Files\GnuPG\bin\gpgsm.exe' --learn-card
+```
+
+
+
+### 5. Verify gpgsm can see the key
+
+```powershell
+# Should show the certificate
+& 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-keys
+
+# Should show the card-backed secret key stub
+& 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-secret-keys
+```
+
+Both should return the same certificate. Copy the fingerprint from `--list-keys` — you will need it for the Git configuration in the next section.
 
 ---
 
@@ -187,9 +205,7 @@ The script handles two things that would otherwise break the Windows binary:
 
 ### 2. Configure Git
 
-Find your certificate fingerprint in Kleopatra
-
-Then configure Git globally:
+Find your certificate fingerprint from the previous step (`gpgsm --list-keys`), then configure Git globally:
 
 ```bash
 git config --global gpg.format x509
