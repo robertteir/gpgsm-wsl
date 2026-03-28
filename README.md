@@ -177,7 +177,8 @@ The signing certificate should appear in the output. Copy its fingerprint — yo
 Copy [`gpgsm-wsl`](gpgsm-wsl) from this repository to `/usr/bin/` and make it executable:
 
 ```bash
-sudo install -m 0755 gpgsm-wsl /usr/bin/gpgsm-wsl
+sudo cp ./gpgsm-wsl /usr/bin/gpgsm-wsl
+sudo chmod +x /usr/bin/gpgsm-wsl
 ```
 
 The script handles two things that would otherwise break the Windows binary:
