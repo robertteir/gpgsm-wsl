@@ -160,10 +160,10 @@ Get the CA fingerprint:
 & 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-keys
 ```
 
-The fingerprint is shown with colons (e.g. `AB:CD:EF:...`). Strip the colons and add a line to `%APPDATA%\gnupg\trustlist.txt` (create the file if it does not exist):
+The fingerprint is shown with colons (e.g. `AB:CD:EF:...`). Add a line to `%APPDATA%\gnupg\trustlist.txt` (create the file if it does not exist):
 
 ```
-ABCDEF...  S
+AB:CD:EF...  S
 ```
 
 The `S` flag marks it as a trusted S/MIME root CA, which is what gpgsm uses for X.509 signing.
