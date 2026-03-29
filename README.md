@@ -49,7 +49,7 @@ openssl genrsa -out ca.key 4096
 openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt -subj "/CN=Cat Factory CA/"
 ```
 
-Keep `ca.key` and `ca.crt` somewhere safe — you will need `ca.crt` later when importing into Gpg4win so it trusts signatures made by this CA.
+Keep `ca.key` and `ca.crt` somewhere safe, you will need `ca.crt` later when importing into Gpg4win so it trusts signatures made by this CA.
 
 ### 3. Create the OpenSSL extension config
 
@@ -208,8 +208,8 @@ sudo chmod +x /usr/bin/gpgsm-wsl
 ```
 
 The script handles two things that would otherwise break the Windows binary:
-- **Path translation** — converts absolute Linux paths (e.g. `/home/user/file`) to their Windows equivalents using `wslpath`.
-- **Stdin forwarding** — when Git passes `-` to signal that signed data should be read from stdin, the script buffers it to a temporary file and passes the Windows path to `gpgsm.exe` instead, since cross-OS stdin piping is unreliable.
+- **Path translation** - converts absolute Linux paths (e.g. `/home/user/file`) to their Windows equivalents using `wslpath`.
+- **Stdin forwarding** - when Git passes `-` to signal that signed data should be read from stdin, the script buffers it to a temporary file and passes the Windows path to `gpgsm.exe` instead, since cross-OS stdin piping is unreliable.
 
 ### 2. Configure Git
 
