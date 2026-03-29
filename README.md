@@ -192,7 +192,7 @@ The `S` flag marks it as a trusted S/MIME root CA, which is what gpgsm uses for 
 & 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-secret-keys
 ```
 
-Both should return the same certificate. Copy the fingerprint from `--list-keys` — you will need it for the Git configuration in the next section.
+Both should return the same certificate. Copy the fingerprint from `--list-keys` - you will need it for the Git configuration in the next section.
 
 ---
 
