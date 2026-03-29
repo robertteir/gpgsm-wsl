@@ -160,7 +160,7 @@ Get the CA fingerprint:
 & 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-keys
 ```
 
-The fingerprint is shown with colons (e.g. `AB:CD:EF:...`). Add a line to `%APPDATA%\gnupg\trustlist.txt` (create the file if it does not exist):
+The fingerprint is shown (e.g. `AB:CD:EF:...`). Add a line to `%APPDATA%\gnupg\trustlist.txt` (create the file if it does not exist):
 
 ```
 AB:CD:EF...  S
