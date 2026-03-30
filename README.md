@@ -14,51 +14,50 @@ WSL does not have native access to smart-card readers, so `gpgsm` inside WSL can
 
 ### Application flow
 
-The following sequence diagram shows how a signed Git operation flows from WSL through the wrapper to Windows `gpgsm.exe`, the GnuPG agent stack, PCSC, and the YubiKey. It mirrors the style of SSH agent relay diagrams: one side is Linux (Git and the wrapper), the other stays on Windows (binary, agent, card).
+The following sequence diagram shows how a signed Git operation flows from WSL through the wrapper to Windows `gpgsm.exe`, the GnuPG agent stack, PCSC, and the YubiKey.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant U as User (WSL shell)
-    participant G as Git (WSL)
-    participant W as gpgsm-wsl (WSL wrapper)
-    participant T as temp file + wslpath (WSL)
-    participant X as gpgsm.exe (Windows, Gpg4win)
-    participant A as gpg-agent (Windows)
-    participant S as scdaemon (Windows)
-    participant P as PCSC / SCardSvr (Windows)
-    participant Y as YubiKey (PIV 9a)
+    participant U as User WSL shell
+    participant G as Git WSL
+    participant W as gpgsm-wsl wrapper
+    participant T as wslpath and temp file
+    participant X as Windows gpgsm from Gpg4win
+    participant A as Windows gpg agent
+    participant S as scdaemon Windows
+    participant P as PCSC SCardSvr
+    participant Y as YubiKey PIV 9a
 
-    U->>G: git commit -S (or verify)
-    G->>W: invoke gpg.x509.program
-    W->>W: parse argv
+    U->>G: git commit signing or verify
+    G->>W: run gpg.x509.program
+    Note over W: parse argv translate paths buffer stdin if needed
 
-    alt Linux absolute path arg
-        W->>T: wslpath -w
-        T-->>W: UNC path under wsl$
-    else bare - (stdin data for gpgsm)
+    alt path is Linux absolute
+        W->>T: run wslpath for path
+        T-->>W: UNC to WSL filesystem
+    else stdin sentinel for gpgsm
         G->>W: payload on stdin
-        W->>T: write stdin to temp file
-        W->>T: wslpath -w temp file
-        T-->>W: UNC path to stdin buffer
-    else flag or non-path value
-        W->>W: pass through unchanged
+        W->>T: write temp file run wslpath
+        T-->>W: UNC to stdin buffer
     end
 
-    W->>X: exec gpgsm.exe with translated args
-    X->>A: sign or verify request
-    A->>S: smart card operation
-    S->>P: PCSC calls
-    P->>Y: APDU / auth on PIV 9a
-    Y-->>P: signature or result
-    P-->>S: card response
-    S-->>A: operation result
-    A-->>X: status and CMS output
-    X-->>G: exit code and stdout/stderr
-    G-->>U: commit signed or verification result
+    Note over W: Flags and fingerprints pass through without path translation
 
-    Note over W,T: On EXIT, trap removes temp dir and stdin buffer
-    Note over P,Y: USB stays on Windows; no usbipd passthrough
+    W->>X: exec with translated argv
+    X->>A: sign or verify
+    A->>S: smartcard op
+    S->>P: PCSC
+    P->>Y: APDU PIV 9a
+    Y-->>P: signature or card result
+    P-->>S: response
+    S-->>A: result
+    A-->>X: CMS output
+    X-->>G: exit code stdout stderr
+    G-->>U: signed commit or verify outcome
+
+    Note over W,T: EXIT trap removes temp dir and stdin file
+    Note over P,Y: Key stays on Windows USB no passthrough to WSL
 ```
 
 ---
@@ -98,7 +97,7 @@ openssl genrsa -out ca.key 4096
 openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt -subj "/CN=Cat Factory CA/"
 ```
 
-Keep `ca.key` and `ca.crt` somewhere safe, you will need `ca.crt` later when importing into Gpg4win so it trusts signatures made by this CA.
+Keep `ca.key` and `ca.crt` somewhere safe — you will need `ca.crt` later when importing into Gpg4win so it trusts signatures made by this CA.
 
 ### 3. Create the OpenSSL extension config
 
@@ -209,10 +208,10 @@ Get the CA fingerprint:
 & 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-keys
 ```
 
-The fingerprint is shown (e.g. `AB:CD:EF:...`). Add a line to `%APPDATA%\gnupg\trustlist.txt` (create the file if it does not exist):
+The fingerprint is shown with colons (e.g. `AB:CD:EF:...`). Strip the colons and add a line to `%APPDATA%\gnupg\trustlist.txt` (create the file if it does not exist):
 
 ```
-AB:CD:EF...  S
+ABCDEF...  S
 ```
 
 The `S` flag marks it as a trusted S/MIME root CA, which is what gpgsm uses for X.509 signing.
@@ -241,7 +240,7 @@ The `S` flag marks it as a trusted S/MIME root CA, which is what gpgsm uses for 
 & 'C:\Program Files\GnuPG\bin\gpgsm.exe' --list-secret-keys
 ```
 
-Both should return the same certificate. Copy the fingerprint from `--list-keys` - you will need it for the Git configuration in the next section.
+Both should return the same certificate. Copy the fingerprint from `--list-keys` — you will need it for the Git configuration in the next section.
 
 ---
 
@@ -257,8 +256,8 @@ sudo chmod +x /usr/bin/gpgsm-wsl
 ```
 
 The script handles two things that would otherwise break the Windows binary:
-- **Path translation** - converts absolute Linux paths (e.g. `/home/user/file`) to their Windows equivalents using `wslpath`.
-- **Stdin forwarding** - when Git passes `-` to signal that signed data should be read from stdin, the script buffers it to a temporary file and passes the Windows path to `gpgsm.exe` instead, since cross-OS stdin piping is unreliable.
+- **Path translation** — converts absolute Linux paths (e.g. `/home/user/file`) to their Windows equivalents using `wslpath`.
+- **Stdin forwarding** — when Git passes `-` to signal that signed data should be read from stdin, the script buffers it to a temporary file and passes the Windows path to `gpgsm.exe` instead, since cross-OS stdin piping is unreliable.
 
 ### 2. Configure Git
 
