@@ -12,6 +12,55 @@ WSL does not have native access to smart-card readers, so `gpgsm` inside WSL can
 2. Providing a thin wrapper script (`gpgsm-wsl`) inside WSL that translates Linux paths to Windows paths and forwards all calls to `gpgsm.exe` on the host.
 3. Pointing Git's X.509 signing pipeline at that wrapper.
 
+### Application flow
+
+The following sequence diagram shows how a signed Git operation flows from WSL through the wrapper to Windows `gpgsm.exe`, the GnuPG agent stack, PCSC, and the YubiKey. It mirrors the style of SSH agent relay diagrams: one side is Linux (Git and the wrapper), the other stays on Windows (binary, agent, card).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as User (WSL shell)
+    participant G as Git (WSL)
+    participant W as gpgsm-wsl (WSL wrapper)
+    participant T as temp file + wslpath (WSL)
+    participant X as gpgsm.exe (Windows, Gpg4win)
+    participant A as gpg-agent (Windows)
+    participant S as scdaemon (Windows)
+    participant P as PCSC / SCardSvr (Windows)
+    participant Y as YubiKey (PIV 9a)
+
+    U->>G: git commit -S (or verify)
+    G->>W: invoke gpg.x509.program
+    W->>W: parse argv
+
+    alt Linux absolute path arg
+        W->>T: wslpath -w
+        T-->>W: UNC path under wsl$
+    else bare - (stdin data for gpgsm)
+        G->>W: payload on stdin
+        W->>T: write stdin to temp file
+        W->>T: wslpath -w temp file
+        T-->>W: UNC path to stdin buffer
+    else flag or non-path value
+        W->>W: pass through unchanged
+    end
+
+    W->>X: exec gpgsm.exe with translated args
+    X->>A: sign or verify request
+    A->>S: smart card operation
+    S->>P: PCSC calls
+    P->>Y: APDU / auth on PIV 9a
+    Y-->>P: signature or result
+    P-->>S: card response
+    S-->>A: operation result
+    A-->>X: status and CMS output
+    X-->>G: exit code and stdout/stderr
+    G-->>U: commit signed or verification result
+
+    Note over W,T: On EXIT, trap removes temp dir and stdin buffer
+    Note over P,Y: USB stays on Windows; no usbipd passthrough
+```
+
 ---
 
 ## Prerequisites
