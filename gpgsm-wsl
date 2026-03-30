@@ -2,6 +2,7 @@
 set -euo pipefail
 
 GPGSM_WIN='/mnt/c/Program Files/GnuPG/bin/gpgsm.exe'
+GPG_WIN='/mnt/c/Program Files/GnuPG/bin/gpg.exe'
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
@@ -36,5 +37,9 @@ if $stdin_to_file; then
   cat > "$stdin_file"
   args+=("$(wslpath -w "$stdin_file")")
 fi
+
+# Wake scdaemon/PCSC before gpgsm. Avoids a spurious "insert card" on the first
+# sign after another client (e.g. SSH with PKCS#11) released the reader.
+"$GPG_WIN" --card-status >/dev/null 2>&1 || true
 
 exec "$GPGSM_WIN" "${args[@]}"

@@ -255,9 +255,10 @@ sudo cp ./gpgsm-wsl /usr/bin/gpgsm-wsl
 sudo chmod +x /usr/bin/gpgsm-wsl
 ```
 
-The script handles two things that would otherwise break the Windows binary:
+The script does the following:
 - **Path translation** — converts absolute Linux paths (e.g. `/home/user/file`) to their Windows equivalents using `wslpath`.
 - **Stdin forwarding** — when Git passes `-` to signal that signed data should be read from stdin, the script buffers it to a temporary file and passes the Windows path to `gpgsm.exe` instead, since cross-OS stdin piping is unreliable.
+- **Card wake-up** — runs `gpg.exe --card-status` (output discarded) before `gpgsm.exe` so scdaemon/PCSC is ready. This avoids a first-use "insert card" prompt right after another stack touched the YubiKey (for example SSH signing via PKCS#11).
 
 ### 2. Configure Git
 
@@ -295,5 +296,6 @@ You should see a line like `Good signature from [...]` in the output.
 | PIN prompt never appears | Wrong `pinentry-program` path | Verify the path in `gpg-agent.conf` matches your Gpg4win install |
 | `certutil -scinfo` shows no card | PCSC service stopped or YubiKey not inserted | Restart the Smart Card service (`SCardSvr`) via `services.msc` or run `Restart-Service SCardSvr` in PowerShell, then replug the YubiKey |
 | `wslpath: invalid argument` | Path contains characters special to WSL | Ensure filenames do not contain backslashes or colons |
+| First sign says insert card, second works (e.g. after SSH with PKCS#11) | PCSC reader handoff between clients | The wrapper runs `gpg.exe --card-status` before each `gpgsm` call; update the script if yours is older. Or run `gpg.exe --card-status` once in PowerShell before signing |
 
 To enable verbose logging, uncomment the `log-file` and `debug-level` lines in the config files and restart the agent.
