@@ -258,7 +258,7 @@ sudo chmod +x /usr/bin/gpgsm-wsl
 The script does the following:
 - **Path translation** — converts absolute Linux paths (e.g. `/home/user/file`) to their Windows equivalents using `wslpath`.
 - **Stdin forwarding** — when Git passes `-` to signal that signed data should be read from stdin, the script buffers it to a temporary file and passes the Windows path to `gpgsm.exe` instead, since cross-OS stdin piping is unreliable.
-- **Card wake-up** — runs `gpg.exe --card-status` (output discarded) before `gpgsm.exe` so scdaemon/PCSC is ready. This avoids a first-use "insert card" prompt right after another stack touched the YubiKey (for example SSH signing via PKCS#11).
+- **Card wake-up** — runs `gpg.exe --card-status` with stdin from `/dev/null` and output discarded before `gpgsm.exe` so scdaemon/PCSC is ready. Without redirecting stdin, `gpg` could consume the commit data Git pipes in for signing and the signature would be wrong. This also avoids a first-use "insert card" prompt right after another stack touched the YubiKey (for example SSH via PKCS#11).
 
 ### 2. Configure Git
 

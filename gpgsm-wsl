@@ -40,6 +40,8 @@ fi
 
 # Wake scdaemon/PCSC before gpgsm. Avoids a spurious "insert card" on the first
 # sign after another client (e.g. SSH with PKCS#11) released the reader.
-"$GPG_WIN" --card-status >/dev/null 2>&1 || true
+# stdin must be /dev/null: Git pipes the commit payload on our stdin for signing;
+# gpg must not read it or gpgsm would sign empty/wrong data.
+"$GPG_WIN" --card-status </dev/null >/dev/null 2>&1 || true
 
 exec "$GPGSM_WIN" "${args[@]}"
