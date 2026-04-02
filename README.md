@@ -298,4 +298,4 @@ You should see a line like `Good signature from [...]` in the output.
 | `wslpath: invalid argument` | Path contains characters special to WSL | Ensure filenames do not contain backslashes or colons |
 | First sign says insert card, second works (e.g. after SSH with PKCS#11) | PCSC reader handoff between clients | The wrapper runs `gpg.exe --card-status` before each `gpgsm` call; update the script if yours is older. Or run `gpg.exe --card-status` once in PowerShell before signing |
 
-To enable verbose logging, uncomment the `log-file` and `debug-level` lines in the config files and restart the agent.
+To enable verbose logging, uncomment the `log-file` and `debug-level` lines in the config files and restart the agent/daemon.
